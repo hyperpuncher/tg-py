@@ -25,11 +25,11 @@ class TgMessage(BaseModel):
 
 class TgReplyParameters(BaseModel):
     message_id: int
-    chat_id: int | None = None
+    chat_id: int | str | None = None
 
 
 class TgMessageData(BaseModel):
-    chat_id: int
+    chat_id: int | str
     message_id: int | None = None
     text: str
     parse_mode: str | None = None
