@@ -6,6 +6,15 @@ class User(BaseModel):
     first_name: str
     last_name: str | None = None
     username: str | None = None
+    is_bot: bool
+
+
+class Chat(BaseModel):
+    id: int
+    first_name: str | None = None
+    last_name: str | None = None
+    username: str | None = None
+    type: str
 
 
 class Photo(BaseModel):
@@ -17,7 +26,8 @@ class Photo(BaseModel):
 
 class Message(BaseModel):
     message_id: int
-    chat: User
+    chat: Chat
+    sender_chat: Chat | None = None
     text: str | None = None
     photo: list[Photo] | None = None
     reply_to_message: "Message | None" = None
