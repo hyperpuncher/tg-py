@@ -1,3 +1,8 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+
 [project]
 name = "tg-py"
 version = "0.1.0"
@@ -5,3 +10,4 @@ description = "Telegram API library"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = ["httpx>=0.28.1", "pydantic>=2.11.3", "tenacity>=9.1.2"]
+py-modules = ["models", "net", "tg"]
