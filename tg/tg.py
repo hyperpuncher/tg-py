@@ -4,10 +4,7 @@ from typing import Any
 import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
-from .models import (
-    TgMessageData,
-    TgUpdates,
-)
+from .models import Updates
 from .net import client
 
 
@@ -15,13 +12,13 @@ from .net import client
     retry=retry_if_exception_type(httpx.ConnectTimeout),
     stop=stop_after_attempt(10),
 )
-async def get_updates(offset: int) -> TgUpdates | None:
+async def get_updates(offset: int) -> Updates | None:
     params = {"timeout": 50, "offset": offset}
 
     try:
         r = await client.get("getUpdates", params=params)
         r.raise_for_status()
-        return TgUpdates(**r.json())
+        return Updates(**r.json())
     except httpx.HTTPStatusError as e:
         print(f"HTTP error: {e}")
     except httpx.ConnectTimeout:
