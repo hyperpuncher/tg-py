@@ -1,3 +1,4 @@
+from .models import Message, Update
 from .net import client
 from .tg import (
     delete_message,
@@ -18,4 +19,6 @@ __all__ = [
     "send_message",
     "send_photo",
     "send_typing_status",
+    "Update",
+    "Message",
 ]
