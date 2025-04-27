@@ -2,13 +2,12 @@ import re
 from typing import Any
 
 import httpx
-from tenacity import retry, retry_if_exception_type, stop_after_attempt
-
 from models import (
     TgMessageData,
     TgUpdates,
 )
-from net import BOT_FILE_URL, tg_client
+from net import tg_client
+from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
 
 @retry(
@@ -96,14 +95,18 @@ async def send_photo(chat_id: int, photos: list[dict[str, Any]]):
         return "Photos sent"
 
 
-async def get_file_url(file_id: str) -> str | None:
+async def get_file_url(file_id: str, bot_token: str) -> str | None:
     r = await tg_client.post(
         "getFile",
         data={"file_id": file_id},
     )
 
     if r.status_code == 200:
-        return BOT_FILE_URL + r.json()["result"]["file_path"]
+        return (
+            "https://api.telegram.org/file/bot"
+            + bot_token
+            + r.json()["result"]["file_path"]
+        )
 
 
 @retry(stop=stop_after_attempt(10))
