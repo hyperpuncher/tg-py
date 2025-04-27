@@ -33,34 +33,52 @@ async def get_updates(offset: int) -> TgUpdates | None:
     retry=retry_if_exception_type(httpx.ConnectTimeout),
     stop=stop_after_attempt(10),
 )
-async def send_message(data: TgMessageData):
+async def send_message(
+    chat_id: int | str,
+    text: str,
+    message_id: int | None = None,
+    parse_mode: str | None = None,
+    reply_markup: dict | None = None,
+    reply_parameters: dict | None = None,
+    link_preview_options: dict = {"is_disabled": True},
+):
     # Remove all tags except <b>, <i>, <u>, and <a>
     pattern = re.compile(r"<(?!\/?(b|i|u|a)\b)[^>]*>")
-    data.text = pattern.sub("", data.text)
+    text = pattern.sub("", text)
 
     # Remove markdown
     pattern = re.compile(r"!\[.*?\]\(.*?\)\n?")
-    data.text = pattern.sub("", data.text)
-    data.text = data.text.replace("### ", "").replace("## ", "")
+    text = pattern.sub("", text)
+    text = text.replace("### ", "").replace("## ", "")
 
-    url = "sendMessage" if not data.message_id else "editMessageText"
+    url = "sendMessage" if not message_id else "editMessageText"
     messages = []
     max_length = 4000
 
-    if len(data.text) > max_length:
+    if len(text) > max_length:
         message = ""
-        for line in data.text.splitlines():
+        for line in text.splitlines():
             if len(message + line) <= max_length:
                 message += line + "\n"
             else:
                 messages.append(message)
                 message = line
     else:
-        messages.append(data.text)
+        messages.append(text)
 
     for message in messages:
-        data.text = message
-        r = await client.post(url, json=data.model_dump(exclude_none=True))
+        json = {
+            "chat_id": chat_id,
+            "text": message,
+            "message_id": message_id,
+            "parse_mode": parse_mode,
+            "reply_markup": reply_markup,
+            "reply_parameters": reply_parameters,
+            "link_preview_options": link_preview_options,
+        }
+        json = {k: v for k, v in json.items() if v is not None}
+
+        r = await client.post(url, json=json)
         r.raise_for_status()
 
 
