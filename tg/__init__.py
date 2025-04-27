@@ -1,5 +1,7 @@
+from .net import client
 from .tg import (
     delete_message,
+    edit_message,
     get_file_url,
     get_updates,
     send_message,
@@ -8,7 +10,9 @@ from .tg import (
 )
 
 __all__ = [
+    "client",
     "delete_message",
+    "edit_message",
     "get_file_url",
     "get_updates",
     "send_message",

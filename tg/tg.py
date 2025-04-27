@@ -2,12 +2,13 @@ import re
 from typing import Any
 
 import httpx
-from models import (
+from tenacity import retry, retry_if_exception_type, stop_after_attempt
+
+from .models import (
     TgMessageData,
     TgUpdates,
 )
-from net import tg_client
-from tenacity import retry, retry_if_exception_type, stop_after_attempt
+from .net import client
 
 
 @retry(
@@ -18,7 +19,7 @@ async def get_updates(offset: int) -> TgUpdates | None:
     params = {"timeout": 50, "offset": offset}
 
     try:
-        r = await tg_client.get("getUpdates", params=params)
+        r = await client.get("getUpdates", params=params)
         r.raise_for_status()
         return TgUpdates(**r.json())
     except httpx.HTTPStatusError as e:
@@ -59,7 +60,7 @@ async def send_message(data: TgMessageData):
 
     for message in messages:
         data.text = message
-        r = await tg_client.post(url, json=data.model_dump(exclude_none=True))
+        r = await client.post(url, json=data.model_dump(exclude_none=True))
         r.raise_for_status()
 
 
@@ -73,7 +74,7 @@ async def edit_message(
     data = {"chat_id": chat_id, "message_id": message_id, "text": text}
     if parse_mode:
         data["parse_mode"] = parse_mode
-    await tg_client.post("editMessageText", json=data)
+    await client.post("editMessageText", json=data)
 
 
 @retry(
@@ -82,12 +83,12 @@ async def edit_message(
 )
 async def delete_message(chat_id: int, message_id: int):
     data = {"chat_id": chat_id, "message_id": message_id}
-    await tg_client.post("deleteMessage", data=data)
+    await client.post("deleteMessage", data=data)
 
 
 @retry(stop=stop_after_attempt(10))
 async def send_photo(chat_id: int, photos: list[dict[str, Any]]):
-    r = await tg_client.post(
+    r = await client.post(
         "sendMediaGroup",
         json={"chat_id": chat_id, "media": photos},
     )
@@ -96,7 +97,7 @@ async def send_photo(chat_id: int, photos: list[dict[str, Any]]):
 
 
 async def get_file_url(file_id: str, bot_token: str) -> str | None:
-    r = await tg_client.post(
+    r = await client.post(
         "getFile",
         data={"file_id": file_id},
     )
@@ -112,4 +113,4 @@ async def get_file_url(file_id: str, bot_token: str) -> str | None:
 @retry(stop=stop_after_attempt(10))
 async def send_typing_status(chat_id: int):
     data = {"chat_id": chat_id, "action": "typing"}
-    await tg_client.post("sendChatAction", data=data)
+    await client.post("sendChatAction", data=data)
