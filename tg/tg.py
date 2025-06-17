@@ -103,10 +103,12 @@ async def delete_message(chat_id: int, message_id: int):
 
 @retry(stop=stop_after_attempt(10))
 async def send_photo(chat_id: int, photos: list[dict[str, Any]]):
-    r = await client.post(
-        "sendMediaGroup",
-        json={"chat_id": chat_id, "media": photos},
-    )
+    batch_size = 10
+    for i in range(0, len(photos), batch_size):
+        r = await client.post(
+            "sendMediaGroup",
+            json={"chat_id": chat_id, "media": photos[i : i + batch_size]},
+        )
     if r.status_code == 200:
         return "Photos sent"
 
